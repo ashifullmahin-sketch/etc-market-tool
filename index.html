@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Auto Marketing Panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- RGB ROTATING GLOW BACKGROUND -->
+<div class="rgb-bg">
+  <span></span>
+</div>
+<style>
+/* ===== RESET ===== */
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+body{background:#050816;color:white;min-height:100vh;overflow-x:hidden;}
+
+/* ===== HIDDEN ===== */
+.hidden{display:none!important;}
+/* ===== RGB CIRCLE GLOW BACKGROUND ===== */
+.rgb-bg{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:-1;
+}
+
+.rgb-bg span{
+  width:420px;
+  height:420px;
+  border-radius:50%;
+  background:conic-gradient(
+    rgb(146, 65, 65),
+    yellow,
+    lime,
+    cyan,
+    blue,
+    magenta,
+    red
+  );
+  filter: blur(25px);
+  animation: rotateGlow 6s linear infinite;
+  opacity:0.9;
+}
+
+/* Soft dark overlay */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:radial-gradient(circle at center,
+    transparent 0%,
+    #050816 60%
+  );
+  z-index:-1;
+}
+
+/* Rotation animation */
+@keyframes rotateGlow{
+  0%{transform:rotate(0deg)}
+  100%{transform:rotate(360deg)}
+}
+/* ===== LOGIN SCREEN ===== */
+#loginScreen{
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:radial-gradient(circle at top,#0c1233,#050816);
+}
+.login-wrapper{position:relative;width:360px;height:360px;display:flex;justify-content:center;align-items:center;}
+.ring{position:absolute;width:100%;height:100%;border-radius:50%;border:2px solid rgba(255,255,255,0.1);animation:spin 15s linear infinite;}
+.ring:nth-child(2){animation-direction:reverse;opacity:0.5;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.login-box{
+  position:relative;background:rgba(10,15,40,0.95);backdrop-filter:blur(10px);
+  padding:40px 30px;width:280px;border-radius:25px;box-shadow:0 0 30px rgba(0,0,0,0.5);text-align:center;z-index:2;
+}
+.login-box h2{margin-bottom:25px;font-size:24px;color:#4f7cff;text-shadow:0 0 10px #4f7cff;}
+.login-box input{width:100%;padding:12px;margin-bottom:15px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:white;text-align:center;font-size:14px;transition:.3s;}
+.login-box input:focus{border:1px solid #4f7cff;box-shadow:0 0 10px #4f7cff;outline:none;}
+.login-box button{width:100%;padding:12px;border:none;border-radius:25px;background:linear-gradient(90deg,#ff4d4d,#ffb347);color:white;font-weight:bold;cursor:pointer;font-size:16px;transition:.3s;}
+.login-box button:hover{transform:scale(1.05);box-shadow:0 0 15px #ff4d4d,0 0 20px #ffb347;}
+#loginMsg{margin-top:12px;color:#ff4d4d;font-weight:bold;min-height:18px;font-size:14px;transition:.3s;}
+
+/* ===== DASHBOARD ===== */
+#dashboard{display:flex;min-height:100vh;}
+
+/* ===== SIDEBAR ===== */
+.sidebar{width:220px;background:#0a1026;padding:20px;}
+.sidebar h3{color:#4f7cff;margin-bottom:20px;text-align:center;}
+.sidebar button{width:100%;margin-bottom:10px;padding:10px;border:none;border-radius:10px;background:#141c44;color:white;cursor:pointer;}
+.sidebar button.logout{background:#ff4d4d;}
+.sidebar button:hover{opacity:.9;}
+
+/* ===== MAIN ===== */
+.main{flex:1;padding:20px;display:flex;flex-direction:column;gap:20px;}
+
+/* ===== CARDS ===== */
+.card{background:#10173a;padding:20px;border-radius:16px;position:relative;overflow:hidden;transition:.3s;}
+.card::before{content:"";position:absolute;inset:-2px;background:linear-gradient(120deg,#ff4d4d,#4f7cff,#4fff9a,#ff4d4d);background-size:300%;animation:glow 6s linear infinite;z-index:-1;border-radius:16px;}
+@keyframes glow{0%{background-position:0%;}100%{background-position:300%;}}
+.card h2{margin-bottom:12px;}
+
+/* ===== BUTTONS ===== */
+.btn{padding:10px 16px;border:none;border-radius:10px;cursor:pointer;font-weight:600;background:#4f7cff;color:#fff;}
+.btn:hover{opacity:.9;}
+.btn-danger{background:#ff4d4d;}
+
+/* ===== GRID ===== */
+.grid{display:grid;gap:16px;}
+.post-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:768px){
+  #dashboard{flex-direction:column;}
+  .sidebar{width:100%;display:flex;gap:10px;overflow-x:auto;}
+  .sidebar button{flex:1;}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="loginScreen">
+  <div class="login-wrapper">
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="login-box">
+      <h2>Admin Login</h2>
+      <input type="text" id="loginUser" placeholder="Username">
+      <input type="password" id="loginPass" placeholder="Password">
+      <button onclick="login()">Sign In</button>
+      <p id="loginMsg"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div id="dashboard" class="hidden">
+  <div class="sidebar">
+    <h3>Auto Panel</h3>
+    <button onclick="showSection('home')">Home</button>
+    <button onclick="showSection('posts')">Posts</button>
+    <button onclick="showSection('ai')">AI Caption</button>
+    <button onclick="showSection('fb')">Facebook</button>
+    <button class="admin-only" onclick="showSection('users')">Users</button>
+    <button class="logout" onclick="logout()">Logout</button>
+  </div>
+  <div class="main">
+    <!-- Home -->
+    <div id="home" class="card">
+      <h2>Welcome to Auto Marketing Panel 🚗</h2>
+      <p>This is your dashboard home page.</p>
+    </div>
+    
+    <!-- Posts -->
+    <div id="posts" class="card hidden">
+      <h2>Create Post</h2>
+      <input id="pTitle" placeholder="Car Name"><br><br>
+      <input id="pPrice" placeholder="Price"><br><br>
+      <textarea id="pDesc" placeholder="Description"></textarea><br><br>
+      <input id="pImages" type="file" multiple accept="image/*"><br><br>
+      <button class="btn" onclick="createPost()">Save Post</button>
+      <p id="postMsg"></p>
+      <h3>Post Library</h3>
+      <div id="postList" class="grid post-grid"></div>
+    </div>
+    
+    <!-- AI Caption -->
+    <div id="ai" class="card hidden">
+      <h2>AI Caption Generator</h2>
+      <select id="aiPost"></select><br><br>
+      <button class="btn" onclick="generateCaption()">Generate</button><br><br>
+      <textarea id="aiOutput" rows="5"></textarea><br><br>
+      <button class="btn" onclick="copyCaption()">Copy</button>
+    </div>
+    
+    <!-- Facebook Targets -->
+    <div id="fb" class="card hidden">
+      <h2>Facebook Targets</h2>
+      <input id="fbLink" placeholder="Facebook Page/Group Link"><br><br>
+      <button class="btn" onclick="addTarget()">Add</button>
+      <div id="fbList" class="grid post-grid" style="margin-top:16px"></div>
+    </div>
+    
+    <!-- Users (Admin only) -->
+    <div id="users" class="card hidden">
+      <h2>User Management</h2>
+      <input id="newUser" placeholder="Username"><br><br>
+      <input id="newPass" placeholder="Password"><br><br>
+      <select id="newRole">
+        <option>User</option>
+        <option>Admin</option>
+      </select><br><br>
+      <button class="btn" onclick="createUser()">Create</button>
+      <div id="userList" class="grid post-grid" style="margin-top:16px"></div>
+    </div>
+    
+  </div>
+</div>
+
+<script>
+/* ===== DEFAULT ADMIN ===== */
+if(!localStorage.users){
+  localStorage.users = JSON.stringify([{u:"admin",p:"1234",role:"Admin"}]);
+}
+if(!localStorage.posts) localStorage.posts="[]";
+if(!localStorage.targets) localStorage.targets="[]";
+
+let currentUser=null;
+
+/* ===== LOGIN ===== */
+function login(){
+  const u=loginUser.value.trim();
+  const p=loginPass.value.trim();
+  const users=JSON.parse(localStorage.users);
+  const found=users.find(x=>x.u===u && x.p===p);
+  if(!found){
+    loginMsg.innerText="Wrong username or password";
+    return;
+  }
+  currentUser=found;
+  localStorage.session="true";
+  loginScreen.classList.add("hidden");
+  dashboard.classList.remove("hidden");
+  
+  // Show admin sections
+  document.querySelectorAll(".admin-only").forEach(b=>{
+    b.style.display=found.role==="Admin"?"block":"none";
+  });
+  
+  loadAll();
+}
+
+/* ===== LOGOUT ===== */
+function logout(){
+  localStorage.removeItem("session");
+  currentUser=null;
+  dashboard.classList.add("hidden");
+  loginScreen.classList.remove("hidden");
+}
+
+/* ===== SECTION SWITCH ===== */
+function showSection(id){
+  document.querySelectorAll(".main > div").forEach(s=>s.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+}
+
+/* ===== AUTO LOGIN ===== */
+if(localStorage.session){
+  loginScreen.classList.add("hidden");
+  dashboard.classList.remove("hidden");
+}
+
+/* ===== POSTS ===== */
+function createPost(){
+  const files=pImages.files;
+  if(files.length<1||files.length>10){postMsg.innerText="Upload 1-10 images"; return;}
+  const imgs=[];
+  [...files].forEach(f=>{
+    const r=new FileReader();
+    r.onload=e=>{
+      imgs.push(e.target.result);
+      if(imgs.length===files.length) savePost(imgs);
+    };
+    r.readAsDataURL(f);
+  });
+}
+function savePost(imgs){
+  const posts=JSON.parse(localStorage.posts);
+  posts.push({id:Date.now(),title:pTitle.value,price:pPrice.value,desc:pDesc.value,imgs});
+  localStorage.posts=JSON.stringify(posts);
+  postMsg.innerText="Post saved!";
+  loadPosts();
+}
+function loadPosts(){
+  postList.innerHTML="";
+  aiPost.innerHTML="";
+  JSON.parse(localStorage.posts).forEach(p=>{
+    aiPost.innerHTML+=`<option value="${p.id}">${p.title}</option>`;
+    postList.innerHTML+=`
+      <div class="card">
+        <img src="${p.imgs[0]}" style="width:100%;height:120px;object-fit:cover;border-radius:10px">
+        <h4>${p.title}</h4>
+        <p>${p.price}</p>
+        <button class="btn-danger" onclick="deletePost(${p.id})">Delete</button>
+      </div>`;
+  });
+}
+function deletePost(id){
+  if(!confirm("Delete this post?")) return;
+  let p=JSON.parse(localStorage.posts);
+  p=p.filter(x=>x.id!==id);
+  localStorage.posts=JSON.stringify(p);
+  loadPosts();
+}
+
+/* ===== AI CAPTION ===== */
+function generateCaption(){
+  const posts=JSON.parse(localStorage.posts);
+  const p=posts.find(x=>x.id==aiPost.value);
+  aiOutput.value=`🔥 ${p.title}\n💰 Price: ${p.price}\n✨ ${p.desc}\n📩 Inbox now!`;
+}
+function copyCaption(){aiOutput.select();document.execCommand("copy");}
+
+/* ===== FACEBOOK ===== */
+function addTarget(){
+  const link=fbLink.value; if(!link) return;
+  const name=link.split("/")[3]||"Facebook";
+  const t=JSON.parse(localStorage.targets);
+  t.push({name,link});
+  localStorage.targets=JSON.stringify(t);
+  loadTargets();
+}
+function loadTargets(){
+  fbList.innerHTML="";
+  JSON.parse(localStorage.targets).forEach((t,i)=>{
+    fbList.innerHTML+=`<div class="card"><h4>${t.name}</h4><a href="${t.link}" target="_blank">${t.link}</a><br><br><button class="btn-danger" onclick="delTarget(${i})">Delete</button></div>`;
+  });
+}
+function delTarget(i){
+  const t=JSON.parse(localStorage.targets); t.splice(i,1); localStorage.targets=JSON.stringify(t); loadTargets();
+}
+
+/* ===== USERS ===== */
+function createUser(){
+  if(currentUser.role!=="Admin") return;
+  const u=JSON.parse(localStorage.users);
+  u.push({user:newUser.value,pass:newPass.value,role:newRole.value});
+  localStorage.users=JSON.stringify(u);
+  loadUsers();
+}
+function loadUsers(){
+  if(currentUser.role!=="Admin") return;
+  userList.innerHTML="";
+  JSON.parse(localStorage.users).forEach(u=>{
+    userList.innerHTML+=`<div class="card"><h4>${u.user}</h4><p>Role: ${u.role}</p><p>Password: ${u.pass}</p></div>`;
+  });
+}
+
+/* ===== LOAD ALL ===== */
+function loadAll(){loadPosts();loadTargets();loadUsers();}
+</script>
+</body>
+</html>
+<!-- Button Styles -->
+<style>
+.btn{
+  padding:10px 16px;
+  border:none;
+  border-radius:12px;
+  font-weight:600;
+  cursor:pointer;
+  color:white;
+  background:linear-gradient(120deg,#4f7cff,#ff4d4d);
+  box-shadow:0 0 10px rgba(255,77,77,0.5),0 0 20px rgba(79,124,255,0.5);
+  transition:0.3s;
+}
+.btn:hover{
+  transform:scale(1.05);
+  box-shadow:0 0 15px rgba(255,77,77,0.7),0 0 25px rgba(79,124,255,0.7);
+}
+.btn-danger{
+  background:linear-gradient(120deg,#ff4d4d,#ffb347);
+  box-shadow:0 0 10px rgba(255,77,77,0.5),0 0 15px rgba(255,179,71,0.5);
+}
+</style>
+
+<!-- Facebook Post Section -->
+<div id="fbPost" class="card hidden">
+  <h2>Post to Saved Facebook Targets</h2>
+  <select id="selectPost"></select><br><br>
+  <button class="btn" onclick="facebookPost()">Post to Facebook Targets</button>
+  <p id="fbPostMsg"></p>
+</div>
+
+<script>
+/* ===== Load Posts into Facebook Post Section ===== */
+function loadFBPosts(){
+  const posts=JSON.parse(localStorage.posts);
+  selectPost.innerHTML="";
+  posts.forEach(p=>{
+    selectPost.innerHTML+=`<option value="${p.id}">${p.title}</option>`;
+  });
+}
+
+/* ===== Facebook Post Simulation ===== */
+function facebookPost(){
+  const postId=selectPost.value;
+  if(!postId){fbPostMsg.innerText="Select a post!"; return;}
+  const posts=JSON.parse(localStorage.posts);
+  const targets=JSON.parse(localStorage.targets);
+  if(targets.length===0){fbPostMsg.innerText="No Facebook targets saved."; return;}
+  const p=posts.find(x=>x.id==postId);
+
+  // Copy content to clipboard
+  const text=`🔥 ${p.title}\n💰 Price: ${p.price}\n✨ ${p.desc}\n📩 Inbox now!`;
+  navigator.clipboard.writeText(text);
+
+  // Open each saved Facebook target in new tab
+  targets.forEach(t=>{
+    window.open(t.link,"_blank");
+  });
+
+  fbPostMsg.innerText=`✅ Post content copied! ${targets.length} Facebook tabs opened.`;
+}
+
+/* ===== When dashboard loads, load FB posts ===== */
+function loadAll(){
+  loadPosts();
+  loadTargets();
+  loadUsers();
+  loadFBPosts();
+}
+</script>
+<style>
+/* ================= RESET ================= */
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+}
+:root{
+  --bg:#050816;
+  --panel:#0b1026;
+  --card:#10173a;
+  --primary:#4f7cff;
+  --danger:#ff4d4d;
+  --accent:#4fff9a;
+  --text:#e6e9ff;
+}
+body{
+  background:radial-gradient(circle at top,#0c1233,var(--bg));
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ================= UTIL ================= */
+.hidden{display:none!important}
+.grid{
+  display:grid;
+  gap:18px;
+}
+.glow{
+  position:relative;
+  border-radius:18px;
+  z-index:1;
+}
+.glow::before{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  background:linear-gradient(
+    120deg,
+    #ff4d4d,
+    #4f7cff,
+    #4fff9a,
+    #ff4d4d
+  );
+  background-size:300%;
+  animation:rgb 6s linear infinite;
+  border-radius:inherit;
+  z-index:-1;
+}
+@keyframes rgb{
+  0%{background-position:0%}
+  100%{background-position:300%}
+}
+
+/* ================= LOGIN ================= */
+#loginScreen{
+  height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.login-wrapper{
+  position:relative;
+  width:360px;
+  height:360px;
+}
+.ring{
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.15);
+  animation:spin 18s linear infinite;
+}
+.ring:nth-child(2){
+  animation-direction:reverse;
+  opacity:.4;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.login-box{
+  position:absolute;
+  inset:40px;
+  background:rgba(15,20,55,.9);
+  backdrop-filter:blur(12px);
+  border-radius:26px;
+  padding:35px 28px;
+  text-align:center;
+}
+.login-box h2{
+  font-size:26px;
+  margin-bottom:25px;
+  color:var(--primary);
+  text-shadow:0 0 12px var(--primary);
+}
+.login-box input{
+  width:100%;
+  padding:14px;
+  margin-bottom:14px;
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.2);
+  background:transparent;
+  color:white;
+  text-align:center;
+  transition:.3s;
+}
+.login-box input:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 12px var(--primary);
+  outline:none;
+}
+.login-box button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:26px;
+  background:linear-gradient(120deg,var(--primary),var(--accent));
+  color:#000;
+  font-weight:700;
+  cursor:pointer;
+  transition:.3s;
+}
+.login-box button:hover{
+  transform:translateY(-2px) scale(1.03);
+  box-shadow:0 0 20px var(--primary),0 0 25px var(--accent);
+}
+#loginMsg{
+  margin-top:10px;
+  min-height:18px;
+  font-size:14px;
+  color:var(--danger);
+}
+
+/* ================= DASHBOARD ================= */
+#dashboard{
+  display:flex;
+  min-height:100vh;
+}
+
+/* ================= SIDEBAR ================= */
+.sidebar{
+  width:240px;
+  background:linear-gradient(180deg,#0b1026,#070b1c);
+  padding:22px 16px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.sidebar h3{
+  text-align:center;
+  color:var(--primary);
+  margin-bottom:10px;
+  letter-spacing:1px;
+}
+.sidebar button{
+  padding:12px;
+  border:none;
+  border-radius:14px;
+  background:rgba(255,255,255,.05);
+  color:var(--text);
+  cursor:pointer;
+  font-weight:600;
+  transition:.3s;
+}
+.sidebar button:hover{
+  background:rgba(79,124,255,.2);
+  box-shadow:inset 0 0 10px rgba(79,124,255,.4);
+}
+.sidebar .logout{
+  margin-top:auto;
+  background:rgba(255,77,77,.15);
+}
+.sidebar .logout:hover{
+  background:rgba(255,77,77,.35);
+}
+
+/* ================= MAIN ================= */
+.main{
+  flex:1;
+  padding:22px;
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+
+/* ================= CARDS ================= */
+.card{
+  background:var(--card);
+  padding:22px;
+  border-radius:18px;
+}
+.card h2{
+  margin-bottom:12px;
+}
+.card p{
+  opacity:.9;
+}
+
+/* ================= BUTTONS ================= */
+.btn{
+  padding:12px 18px;
+  border:none;
+  border-radius:14px;
+  cursor:pointer;
+  font-weight:700;
+  color:white;
+  background:linear-gradient(120deg,var(--primary),#7aa2ff);
+  box-shadow:0 0 12px rgba(79,124,255,.5);
+  transition:.3s;
+}
+.btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 0 18px rgba(79,124,255,.8);
+}
+.btn-danger{
+  background:linear-gradient(120deg,var(--danger),#ffb347);
+  box-shadow:0 0 12px rgba(255,77,77,.5);
+}
+
+/* ================= POSTS ================= */
+.post-grid{
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+}
+.post-card img{
+  width:100%;
+  height:130px;
+  object-fit:cover;
+  border-radius:14px;
+  margin-bottom:10px;
+}
+
+/* ================= INPUTS ================= */
+input,textarea,select{
+  width:100%;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.2);
+  background:#070b1c;
+  color:white;
+}
+textarea{resize:vertical;min-height:90px}
+select{cursor:pointer}
+
+/* ================= MOBILE ================= */
+@media(max-width:768px){
+  #dashboard{
+    flex-direction:column;
+  }
+  .sidebar{
+    width:100%;
+    flex-direction:row;
+    overflow-x:auto;
+  }
+  .sidebar button{
+    flex:1;
+    white-space:nowrap;
+  }
+}
+</style>
